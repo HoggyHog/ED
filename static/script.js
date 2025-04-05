@@ -1,9 +1,9 @@
 // Word lists for different lengths
 const wordLists = {
-    5: ["power"],
-    6: ["energy"],
-    7: ["current"],
-    8: ["windmill"]
+    5: ["power","anode","solar","reuse","green"],
+    6: ["energy","biogas","charge","offset","reduce","biogas"],
+    7: ["current","outages","climate","recycle","battery"],
+    8: ["windmill","dispatch","blackout","hydrogen","electric"]
 };
 
 let currentWord = "";
@@ -17,6 +17,9 @@ let totalScore = 0;
 let roundNumber = 1;
 
 let team_name=localStorage.getItem('teamName')
+
+let usedWords = new Set(); // Track words already used
+
 
 
 // Calculate score based on word length and number of attempts
@@ -39,19 +42,37 @@ function initGame(isNewGame = true) {
     if (isNewGame) {
         totalScore = 0;
         roundNumber = 1;
+        usedWords.clear();
         updateScoreDisplay();
         updateRoundDisplay();
     }
 
     // Choose a random word length between 5 and 8
-    wordLength = Math.floor(Math.random() * 4) + 5; // Random number between 5 and 8
+    function getNewWord() {
+        let attempts = 0;
     
-    // Update the word length display
+        while (attempts < 100) {
+            const len = Math.floor(Math.random() * 4) + 5; // 5–8
+            const candidates = wordLists[len].filter(word => !usedWords.has(word));
+    
+            if (candidates.length > 0) {
+                const word = candidates[Math.floor(Math.random() * candidates.length)];
+                usedWords.add(word);
+                return { word, length: len };
+            }
+    
+            attempts++;
+        }
+    
+        alert("⚠️ Out of unique words!");
+        return { word: "error", length: 5 };
+    }
+    
+    const { word, length } = getNewWord();
+    currentWord = word;
+    wordLength = length;
+
     document.getElementById("current-length").textContent = `Word length: ${wordLength}`;
-    
-    // Choose a random word based on the selected length
-    currentWord = wordLists[wordLength][Math.floor(Math.random() * wordLists[wordLength].length)];
-    
     // Clear the board
     const board = document.getElementById("board");
     board.innerHTML = "";
@@ -359,7 +380,7 @@ function registerTeam() {
         alert("Enter a team name");
         return;
     }
-    fetch("/register", {
+    fetch("register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ team_name: teamName })

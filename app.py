@@ -55,7 +55,7 @@ def admin_page():
 @app.route('/admin_login', methods=['POST'])
 def admin_login():
     data = request.json
-    if data.get('username') == 'Pradheep' and data.get('password') == '3':
+    if data.get('username') == 'Pradheep' and data.get('password') == 'Tamilan@290803':
         session['admin'] = True
         return jsonify({"status": "success"}), 200
     return jsonify({"status": "error", "message": "Unauthorized"}), 401
@@ -100,6 +100,10 @@ def next_round():
 def run_game():
     return render_template('run.html')
 
+@app.route('/game_over')
+def game_over():
+    return render_template('game_over.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
 
@@ -114,6 +118,8 @@ def push_score():
     score = data.get('score')
     live_scores[team_name] = score
     return jsonify({"status": "success"})
+
+
 
 
 #@app.route('/progress', methods=['GET'])  # update to use live_scores now

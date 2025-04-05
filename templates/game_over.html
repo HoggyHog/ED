@@ -1,0 +1,31 @@
+<!-- templates/game_over.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Over</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            padding-top: 100px;
+        }
+        .score {
+            font-size: 36px;
+            margin-top: 20px;
+            color: #6aaa64;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <h1>⏱️ Time's Up!</h1>
+    <p class="score">Your Final Score: <span id="finalScore"></span></p>
+
+    <script>
+        const score = localStorage.getItem("finalScore") || 0;
+        document.getElementById("finalScore").textContent = score;
+    </script>
+</body>
+</html>
