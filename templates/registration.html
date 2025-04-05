@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Team Registration</title>
+</head>
+<body style="display: flex; flex-direction: column; align-items: center; margin-top: 100px;">
+    <h1>Register Team</h1>
+    <input type="text" id="teamNameInput" placeholder="Enter team name" />
+    <input type="text" id="emailInput" placeholder="Enter email" />
+    <input type="text" id="mobileInput" placeholder="Enter mobile number" maxlength="10" />
+    <button onclick="registerTeam()">Register</button>
+    <p id="message"></p>
+    <script>
+        function registerTeam() {
+            const teamName = document.getElementById("teamNameInput").value;
+            console.log(teamName);
+            localStorage.setItem("teamName", teamName);
+            const email = document.getElementById("emailInput").value;
+            const mobile = document.getElementById("mobileInput").value;
+
+            fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ team_name: teamName, email: email, mobile: mobile })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("message").textContent = data.message;
+                if (data.message === "Registered" || data.message === "Team already exists") {
+                    
+                    window.location.href = "/game";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+<script>
+    function checkGameStatus() {
+        fetch('/game_status')
+            .then(res => res.json())
+            .then(data => {
+                if (data.started) {
+                    window.location.href = "/run";
+                } else {
+                    setTimeout(checkGameStatus, 2000);
+                }
+            });
+    }
+
+    window.onload = function() {
+        checkGameStatus();
+    };
+</script>

@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        #admin-panel { display: none; margin-top: 20px; }
+        canvas { margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <h2>Admin Login</h2>
+    <input type="text" id="admin-username" placeholder="Username"><br>
+    <input type="password" id="admin-password" placeholder="Password"><br>
+    <button onclick="adminLogin()">Login</button>
+
+    <div id="admin-panel">
+        <h3>Game Dashboard</h3>
+        <button onclick="startGame()">Start Game</button>
+        <p id="status-msg"></p>
+        <canvas id="progressChart" width="600" height="300"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let chart;
+
+        function adminLogin() {
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            fetch('/admin_login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            }).then(res => res.json())
+              .then(data => {
+                  if (data.status === "success") {
+                      document.getElementById('admin-panel').style.display = 'block';
+                      setInterval(fetchProgress, 3000);
+                  } else {
+                      alert("Unauthorized");
+                  }
+              });
+        }
+
+        function startGame() {
+            fetch('/start_game', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        document.getElementById('status-msg').innerText = "Game Started!";
+                    }
+                });
+        }
+
+        function fetchProgress() {
+            fetch('/progress')
+                .then(res => res.json())
+                .then(data => {
+                    const teams = data.map(d => d.team);
+                    const rounds = data.map(d => d.score);
+                    if (!chart) {
+                        const ctx = document.getElementById('progressChart').getContext('2d');
+                        chart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: teams,
+                                datasets: [{
+                                    label: 'Score',
+                                    data: rounds,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 2000
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        chart.data.labels = teams;
+                        chart.data.datasets[0].data = rounds;
+                        chart.update();
+                    }
+                });
+        }
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let chart;
+
+function fetchProgress() {
+    fetch('/progress')
+        .then(res => res.json())
+        .then(data => {
+            const teams = data.map(d => d.team);
+            const scores = data.map(d => d.score);  // ✅ read .score not .round
+
+            if (!chart) {
+                const ctx = document.getElementById('progressChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: teams,
+                        datasets: [{
+                            label: 'Live Score',
+                            data: scores
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 2000
+                            }
+                        }
+                    }
+                });
+            } else {
+                chart.data.labels = teams;
+                chart.data.datasets[0].data = scores;
+                chart.update();
+            }
+        });
+}
+
+
+
+window.onload = () => {
+    fetchProgress();
+    setInterval(fetchProgress, 3000);
+};
+</script>
+<canvas id="progressChart" width="600" height="300"></canvas>
+
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variable Wordle</title>
+    <style>
+        :root {
+            --correct: #6aaa64;
+            --present: #c9b458;
+            --absent: #787c7e;
+            --keyboard-bg: #d3d6da;
+            --border: #d3d6da;
+            --bg-color: #ffffff;
+            --text-color: #1a1a1b;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        header {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .current-length {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .score-display {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .rounds-display {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        .settings {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 5px;
+            margin-bottom: 30px;
+        }
+
+        .row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tile {
+            width: 62px;
+            height: 62px;
+            border: 2px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 500px) {
+            .tile {
+                width: 50px;
+                height: 50px;
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .tile {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+        }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .key {
+            height: 58px;
+            border-radius: 4px;
+            background-color: var(--keyboard-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            text-transform: uppercase;
+            flex: 1;
+            min-width: 30px;
+        }
+
+        .key.wide {
+            flex: 1.5;
+            font-size: 12px;
+        }
+
+        .correct {
+            background-color: var(--correct);
+            color: white;
+            border-color: var(--correct);
+        }
+
+        .present {
+            background-color: var(--present);
+            color: white;
+            border-color: var(--present);
+        }
+
+        .absent {
+            background-color: var(--absent);
+            color: white;
+            border-color: var(--absent);
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(-5px); }
+            20% { transform: translateX(5px); }
+            30% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            50% { transform: translateX(-5px); }
+            60% { transform: translateX(5px); }
+            70% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+            90% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .flip {
+            animation: flip 0.5s;
+        }
+
+        @keyframes flip {
+            0% { transform: rotateX(0); }
+            50% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0); }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            background-color: var(--correct);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+
+        .modal-button.secondary {
+            background-color: var(--keyboard-bg);
+            color: var(--text-color);
+        }
+
+        .message {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="title">Random Wordle</div>
+    </header>
+<div style="margin-top: 20px;">
+    <input type="text" id="teamNameInput" placeholder="Enter team name" />
+    <button onclick="registerTeam()">Register</button>
+    <button onclick="showLeaderboard()">Show Leaderboard</button>
+</div>
+<pre id="leaderboard" style="margin-top: 20px;"></pre>
+
+
+    <div class="info-bar">
+        <div class="current-length" id="current-length">Word length: 5</div>
+        <div class="score-display" id="score-display">Score: 0</div>
+    </div>
+    <div class="rounds-display" id="rounds-display">Round: 1</div>
+
+    <div class="game-container">
+        <div class="settings">
+            <button id="new-game">New Game</button>
+        </div>
+        
+        <div class="board" id="board"></div>
+
+        <div class="keyboard">
+            <div class="keyboard-row">
+                <div class="key" data-key="q">q</div>
+                <div class="key" data-key="w">w</div>
+                <div class="key" data-key="e">e</div>
+                <div class="key" data-key="r">r</div>
+                <div class="key" data-key="t">t</div>
+                <div class="key" data-key="y">y</div>
+                <div class="key" data-key="u">u</div>
+                <div class="key" data-key="i">i</div>
+                <div class="key" data-key="o">o</div>
+                <div class="key" data-key="p">p</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="a">a</div>
+                <div class="key" data-key="s">s</div>
+                <div class="key" data-key="d">d</div>
+                <div class="key" data-key="f">f</div>
+                <div class="key" data-key="g">g</div>
+                <div class="key" data-key="h">h</div>
+                <div class="key" data-key="j">j</div>
+                <div class="key" data-key="k">k</div>
+                <div class="key" data-key="l">l</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key wide" data-key="Enter">enter</div>
+                <div class="key" data-key="z">z</div>
+                <div class="key" data-key="x">x</div>
+                <div class="key" data-key="c">c</div>
+                <div class="key" data-key="v">v</div>
+                <div class="key" data-key="b">b</div>
+                <div class="key" data-key="n">n</div>
+                <div class="key" data-key="m">m</div>
+                <div class="key wide" data-key="Backspace">⌫</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="game-end-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-message" id="modal-message"></div>
+            <div class="button-group">
+                <button class="modal-button" id="next-round">Next Round</button>
+                <button class="modal-button secondary" id="play-again">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+<div id="timer" style="font-size: 20px; margin-bottom: 15px;"></div>
+<script>
+    let totalTime = 15 * 60; // 15 minutes in seconds
+
+    function startPlayerTimer() {
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            timerEl.innerText = `Time Left: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            totalTime--;
+
+            if (totalTime < 0) {
+                clearInterval(interval);
+                timerEl.innerText = "Time's up! Game Over.";
+                document.getElementById('game-area').style.display = 'none';
+                // Optionally show final score or redirect
+            }
+        }, 1000);
+    }
+
+    window.onload = startPlayerTimer;
+</script>
+
+<div id="timer" style="font-size: 20px; margin-bottom: 15px;"></div>
+<button onclick="nextRound()">Next Round</button>
+
+<script>
+    let totalTime = 15 * 60; // 15 minutes in seconds
+    let totalScore = 0;
+
+    function startPlayerTimer() {
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            timerEl.innerText = `Time Left: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            totalTime--;
+
+            if (totalTime < 0) {
+                clearInterval(interval);
+                timerEl.innerText = "Time's up! Game Over.";
+                document.getElementById('game-area').style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    window.onload = () => {
+        startPlayerTimer();
+
+        document.getElementById('next-round').addEventListener('click', () => {
+            const teamName = localStorage.getItem('teamName');
+            const score = parseInt(prompt("Enter score for this round:"));
+
+            totalScore += score;
+            console.log("🔢 Total Score:", totalScore);
+
+            // 1. Update dashboard
+            fetch('/push_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ team_name: teamName, score: totalScore })
+            });
+
+            // 2. Update DB score
+            fetch('/submit_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ team_name: teamName, score: score }) // only this round's score
+            });
+
+            
+        });
+    };
+</script>
+
