@@ -1,9 +1,9 @@
 // Word lists for different lengths
 const wordLists = {
-    5: ["power","anode","solar","reuse","green"],
-    6: ["energy","biogas","charge","offset","reduce","biogas"],
-    7: ["current","outages","climate","recycle","battery"],
-    8: ["windmill","dispatch","blackout","hydrogen","electric"]
+    5: ["steam","anode","solar","diode","green","gibbs","spark"],
+    6: ["energy","biogas","charge","offset","reduce","biogas","module","plasma"],
+    7: ["current","outages","climate","recycle","battery","diurnal"],
+    8: ["windmill","dispatch","blackout","hydrogen","electric","insulate","emission"]
 };
 
 let currentWord = "";
@@ -19,8 +19,6 @@ let roundNumber = 1;
 let team_name=localStorage.getItem('teamName')
 
 let usedWords = new Set(); // Track words already used
-
-
 
 // Calculate score based on word length and number of attempts
 function calculateScore(wordLength, attempts) {
@@ -42,7 +40,6 @@ function initGame(isNewGame = true) {
     if (isNewGame) {
         totalScore = 0;
         roundNumber = 1;
-        usedWords.clear();
         updateScoreDisplay();
         updateRoundDisplay();
     }
@@ -71,7 +68,7 @@ function initGame(isNewGame = true) {
     const { word, length } = getNewWord();
     currentWord = word;
     wordLength = length;
-
+    
     document.getElementById("current-length").textContent = `Word length: ${wordLength}`;
     // Clear the board
     const board = document.getElementById("board");
@@ -341,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     // New game button
-    document.getElementById("new-game").addEventListener("click", () => initGame(true));
+    //document.getElementById("new-game").addEventListener("click", () => initGame(true));
     
     // Next round button in modal
     document.getElementById("next-round").addEventListener("click", () => {
@@ -350,10 +347,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     // Play again (new game) button in modal
+    /**
     document.getElementById("play-again").addEventListener("click", () => {
         document.getElementById("game-end-modal").classList.remove("show");
         initGame(true);
-    });
+    });*/
 });
 
 // Handle window resize
@@ -380,7 +378,7 @@ function registerTeam() {
         alert("Enter a team name");
         return;
     }
-    fetch("register", {
+    fetch("/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ team_name: teamName })
